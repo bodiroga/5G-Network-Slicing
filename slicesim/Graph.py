@@ -5,13 +5,27 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter, FuncFormatter
 import randomcolor
+import colorsys
+from typing import List, Tuple
 
 from .utils import format_bps
 
 
+def distinct_colors(n: int) -> List[str]:
+    """
+    Generate n visually distinct colors in hex format.
+    """
+    hues = [i / n for i in range(n)]
+    colors = [colorsys.hsv_to_rgb(h, 0.7, 0.9) for h in hues]
+    return ["#%02x%02x%02x" % (int(r*255), int(g*255), int(b*255)) for r, g, b in colors]
+
+
 class Graph:
-    def __init__(self, base_stations, clients, xlim, map_limits,
-                 output_dpi=500, scatter_size=15, output_filename='output.png'):
+    def __init__(self, base_stations, clients, xlim: Tuple[int, int], map_limits: Tuple[Tuple[int, int], Tuple[int, int]],
+                 output_dpi: int = 500, scatter_size: int = 15, output_filename: str = 'output.png'):
+        """
+        Initialize the Graph for visualization.
+        """
         self.output_filename = output_filename
         self.base_stations = base_stations
         self.clients = clients
@@ -24,23 +38,30 @@ class Graph:
 
         self.gs = gridspec.GridSpec(4, 3, width_ratios=[6, 3, 3])
 
-        rand_color = randomcolor.RandomColor()
-        colors = rand_color.generate(luminosity='bright', count=len(base_stations))
-        # colors = [np.random.randint(256*0.2, 256*0.7+1, size=(3,))/256 for __ in range(len(self.base_stations))]
+        # Use distinct colors for base stations
+        colors = distinct_colors(len(base_stations))
         for c, bs in zip(colors, self.base_stations):
             bs.color = c
-        # TODO prevent similar colors
 
     def draw_live(self, *stats):
+        """
+        Draw the live animation of the simulation.
+        """
         ani = animation.FuncAnimation(self.fig, self.draw_all, fargs=stats, interval=1000)
         plt.show()
 
     def draw_all(self, *stats):
+        """
+        Draw all plots for the simulation.
+        """
         plt.clf()
         self.draw_map()
         self.draw_stats(*stats)
 
     def draw_map(self):
+        """
+        Draw the map with base stations and clients.
+        """
         markers = ['o', 's', 'p', 'P', '*', 'H', 'X', 'D', 'v', '^', '<', '>', '1', '2', '3', '4']
         self.ax = plt.subplot(self.gs[:, 0])
         xlims, ylims = self.map_limits
@@ -78,6 +99,9 @@ class Graph:
             leg.legendHandles[i].set_color('k')
 
     def draw_stats(self, vals, vals1, vals2, vals3, vals4, vals5, vals6):
+        """
+        Draw the statistics plots.
+        """
         self.ax1 = plt.subplot(self.gs[0, 1])
         self.ax1.plot(vals)
         self.ax1.set_xlim(self.xlim)
@@ -162,13 +186,21 @@ class Graph:
         plt.tight_layout()
 
     def save_fig(self):
+        """
+        Save the current figure to a file.
+        """
         self.fig.savefig(self.output_filename, dpi=1000)
 
     def show_plot(self):
+        """
+        Show the plot window.
+        """
         plt.show()
 
     def get_map_limits(self):
-        # deprecated
+        """
+        Deprecated: Get the map limits based on base station coverage.
+        """
         x_min = min([bs.coverage.center[0]-bs.coverage.radius for bs in self.base_stations])
         x_max = max([bs.coverage.center[0]+bs.coverage.radius for bs in self.base_stations])
         y_min = min([bs.coverage.center[1]-bs.coverage.radius for bs in self.base_stations])
