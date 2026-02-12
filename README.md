@@ -35,7 +35,7 @@ To get started, you can clone the repository and set up your local environment. 
 
     ```bash
     git clone https://github.com/rohan-chandrashekar/5g-network-slicing.git
-    cd 5g-network-slicing-simulation
+    cd 5g-network-slicing
     ```
 
 2. Install the necessary dependencies:
